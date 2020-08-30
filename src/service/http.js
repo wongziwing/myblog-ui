@@ -1,7 +1,6 @@
 import axios from 'axios'
 import service from './articleApi'
 
-// service 循环遍历输出不同的请求方法
 let instance = axios.create({
 	withCredentials: true,
 	baseURL: '/api',
@@ -11,6 +10,7 @@ let instance = axios.create({
 const Http = {}; // 包裹请求方法的容器
 
 // 请求参数统一
+// service 循环遍历输出不同的请求方法
 for (let key in service){
 	let api = service[key]; // 包含url，method
 	Http[key] = async function(
@@ -56,7 +56,7 @@ instance.interceptors.request.use(config => {
 	return config
 }, () => {
 	//请求错误
-	alert("error")
+	alert("request error")
 })
 
 // 响应拦截器

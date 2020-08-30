@@ -1,75 +1,88 @@
 <template>
 	<div>
 		<el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-			<el-form-item label="密码" prop="pass">
-				<el-input type="password" v-model="ruleForm.pass" autocomplete="off"></el-input>
+			<el-form-item label="文章标题" prop="title">
+				<el-input type="text" v-model="ruleForm.title" autocomplete="off"
+				          maxlength="32" show-word-limit placeholder="请输入标题"
+				>
+				</el-input>
 			</el-form-item>
-			<el-form-item label="确认密码" prop="checkPass">
-				<el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
+			<el-form-item label="文章标签" prop="tags">
+				<el-input type="text" v-model="ruleForm.tags" autocomplete="off" maxlength="32" show-word-limit
+				          placeholder="请输入标签，多个标签以英文逗号分隔"
+				>
+				</el-input>
 			</el-form-item>
-			<el-form-item label="年龄" prop="age">
-				<el-input v-model.number="ruleForm.age"></el-input>
+
+			<!-- 富文本框 -->
+			<el-form-item prop="content">
+				<quill-editor ref="text" v-model="ruleForm.content" style="height: 300px"></quill-editor>
 			</el-form-item>
-			<el-form-item>
+
+			<el-form-item style="margin-top: 60px">
 				<el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
-				<el-button @click="resetForm('ruleForm')">重置</el-button>
 			</el-form-item>
 		</el-form>
 	</div>
 </template>
 <script>
+	import { quillEditor } from 'vue-quill-editor'
+	import 'quill/dist/quill.snow.css'
+	import 'quill/dist/quill.core.css'
+	import 'quill/dist/quill.bubble.css'
+
 	export default {
+
+		components: {
+			quillEditor,
+		},
 		data() {
-			var checkAge = (rule, value, callback) => {
-				if (!value) {
-					return callback(new Error('年龄不能为空'));
-				}
-				setTimeout(() => {
-					if (!Number.isInteger(value)) {
-						callback(new Error('请输入数字值'));
-					} else {
-						if (value < 18) {
-							callback(new Error('必须年满18岁'));
-						} else {
-							callback();
-						}
-					}
-				}, 1000);
-			};
-			var validatePass = (rule, value, callback) => {
+			// 标题规则
+			var checkTitle = (rule, value, callback) => {
 				if (value === '') {
-					callback(new Error('请输入密码'));
-				} else {
-					if (this.ruleForm.checkPass !== '') {
-						this.$refs.ruleForm.validateField('checkPass');
-					}
-					callback();
+					return callback(new Error('标题不能为空'));
 				}
+				if (value.length > 32){
+					return callback(new Error('标题长度不能超过32'))
+				}
+				callback()
 			};
-			var validatePass2 = (rule, value, callback) => {
+			// 标签规则
+			var checkTags = (rule, value, callback) => {
 				if (value === '') {
-					callback(new Error('请再次输入密码'));
-				} else if (value !== this.ruleForm.pass) {
-					callback(new Error('两次输入密码不一致!'));
-				} else {
-					callback();
+					return callback(new Error('标签不能为空'));
 				}
+				if (value.length > 32){
+					return callback(new Error('标签长度不能超过32'))
+				}
+				callback()
+			};
+
+			// 内容规则
+			var checkContent = (rule, value, callback) => {
+				if (value === ''){
+					return callback(new Error('内容不能为空'));
+				}
+				if (value.length > 30000){
+					return callback(new Error('内容长度不能超过30000'))
+				}
+				callback()
 			};
 			return {
 				ruleForm: {
-					pass: '',
-					checkPass: '',
-					age: ''
+					title: '',
+					tags: '',
+					content: '',
 				},
 				rules: {
-					pass: [
-						{ validator: validatePass, trigger: 'blur' }
+					title: [
+						{ validator: checkTitle, trigger: 'blur' }
 					],
-					checkPass: [
-						{ validator: validatePass2, trigger: 'blur' }
+					tags: [
+						{ validator: checkTags, trigger: 'blur' }
 					],
-					age: [
-						{ validator: checkAge, trigger: 'blur' }
+					content: [
+						{ validator: checkContent, trigger: 'blur' }
 					]
 				}
 			};
@@ -78,15 +91,20 @@
 			submitForm(formName) {
 				this.$refs[formName].validate((valid) => {
 					if (valid) {
-						alert('submit!');
+						this.submitData()
 					} else {
 						console.log('error submit!!');
 						return false;
 					}
 				});
 			},
-			resetForm(formName) {
-				this.$refs[formName].resetFields();
+			async submitData(){
+				let formData = new FormData();
+				Object.keys(this.ruleForm).map(key => {
+					formData.append(key, this.ruleForm[key])
+				})
+				let res = await this.$Http.newArticle(formData)
+				console.log('res', res)
 			}
 		}
 	}

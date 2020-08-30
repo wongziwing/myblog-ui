@@ -30,8 +30,13 @@ export default new Router({
 					path: 'add',
 					component: () => import('../view/AddArticle'),
 					meta: {title: '添加文章'},
+				},
+				{
+					path: '*',
+					component: () => import('../view/404'),
+					meta: {title: '找不到页面'}
 				}
 			]
-		}
+		},
 	]
 })
